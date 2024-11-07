@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Information</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .symptom-section, .question-section {
+            width: 48%;
+        }
+        .symptom-container, .question-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .symptom-search input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .dropdown {
+            position: absolute;
+            top: 40px;
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            display: none;
+        }
+        .dropdown ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .dropdown ul li {
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .dropdown ul li:hover {
+            background-color: #e0e0e0;
+        }
+        .selected-symptoms ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .selected-symptoms ul li {
+            background-color: #ffffff;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .selected-symptoms ul li::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(0, 123, 255, 0.4), transparent);
+            transition: all 0.5s ease;
+        }
+        .selected-symptoms ul li:hover::before {
+            left: 100%;
+        }
+        .selected-symptoms ul li:hover {
+            background-color: rgb(98, 0, 238);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="symptom-section">
+            <h1>Symptom Information</h1>
+            <div class="symptom-container">
+                <div class="symptom-search">
+                    <input type="text" id="symptomSearch" placeholder="Search symptoms...">
+                    <div class="dropdown">
+                        <ul id="symptomDropdown">
+                            {% for symptom in symptoms %}
+                                <li>{{ symptom }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="selected-symptoms">
+                    <h3>Selected Symptoms</h3>
+                    <ul id="selectedSymptomsList">
+                        <!-- Selected symptoms will be displayed here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="question-section">
+            <h1>Additional Information</h1>
+            <div class="question-container">
+                <form action="{{ url_for('symptoms_page') }}" method="post">
+                    <input type="hidden" id="symptoms" name="symptoms">
+                    <label for="overweight">Are you overweight?</label>
+                    <select id="overweight" name="overweight">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="dont_know">I don't know</option>
+                    </select>
+                    <label for="smoke">Do you smoke?</label>
+                    <select id="smoke" name="smoke">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="dont_know">I don't know</option>
+                    </select>
+                    <label for="injured">Have you been injured recently?</label>
+                    <select id="injured" name="injured">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="dont_know">I don't know</option>
+                    </select>
+                    <label for="cholesterol">Do you have high cholesterol?</label>
+                    <select id="cholesterol" name="cholesterol">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="dont_know">I don't know</option>
+                    </select>
+                    <label for="hypertension">Do you have hypertension?</label>
+                    <select id="hypertension" name="hypertension">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="dont_know">I don't know</option>
+                    </select>
+                    <label for="diabetes">Do you have diabetes?</label>
+                    <select id="diabetes" name="diabetes">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="dont_know">I don't know</option>
+                    </select>
+                    <div class="button-container">
+                        <button class="button-29" type="submit">Predict Disease</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const symptomSearch = document.getElementById('symptomSearch');
+    const symptomDropdown = document.getElementById('symptomDropdown');
+    const selectedSymptomsList = document.getElementById('selectedSymptomsList');
+    const dropdown = document.querySelector('.dropdown');
+
+    // List of symptoms to be added to the dropdown
+    const symptoms = [
+    "Stomach Pain", "Painful Joint at Base of Big Toe", "Mental Ability Issues", "Sleep Problem", 
+    "Infertility", "Dehydration", "Diarrhea", "Mild Pain", "Mouth Ulcer", "Heartburn", 
+    "Breathing Problem", "Body Tremor", "Involuntary Muscle Movement", 
+    "Expanding Area of Redness at Site of Tick Bite", "Cough with Sputum Production", 
+    "Joint or Bone Pain", "Breakdown of Skeletal Muscle", "Back Pain", "Bruising", 
+    "Flu-Like Illness", "Pain Around Ear", "Decreased Ability to Think or Remember", 
+    "Cold Sweat", "Excess Hair", "Enlarged Tonsils", "Stiffness", 
+    "Distant Objects Appear Blurry", "Red Skin", "White Skin Patches", 
+    "Burning Sensation", "Redness without Blister", "Increasing Weakness", 
+    "Impaired Communication", "Trouble Walking", "Loose, Frequent Bowel Movement", 
+    "Maculopapular Rash", "Alcohol Addiction", "Gradual Loss of Coordination", 
+    "Minimal Symptoms", "Rough Skin Growth", "Small Face", "Webbed Neck", 
+    "Enlarged Thyroid", "Cleft Lip or Palate", "Trouble Speaking", 
+    "Fast Heartbeat", "Unintended Weight Loss", "Dizziness", "Erythema Marginatum", 
+    "Sudden Loss of Muscle Strength", "Acid Taste", "Coordination Trouble", 
+    "Swollen Hands or Feet", "Tingling in Thumb", "Lower Abdominal Pain", 
+    "Swelling of Hands or Feet", "Red Eye", "Muscle or Joint Pain", 
+    "Swollen Lymph Nodes", "OCD-like Repetitive Behavior", "Red Eye", 
+    "Muscle Cramps", "Psychosis", "Pain During Sex", "Sleeping Problem", 
+    "Variable Symptoms", "Chest Tightness", "Inability to Have Children", 
+    "Confused Thinking", "Decreased Appetite", "Yellowish Skin Crust", 
+    "Persistent Fatigue", "Long-Term Fatigue", "Shivering", "Heat Intolerance", 
+    "Hair Loss", "Excessive Sweating", "Tingling in Hands or Feet", 
+    "Bluish Skin", "Painful Swelling of Parotid Gland", "Clenched Fist with Overlapping Fingers", 
+    "Change in Bowel Movement", "Intellectual Disability", "Developmental Delays", 
+    "Fear of Water", "Changes in Sleeping or Eating Pattern", "Chest Pain", 
+    "Gaming Addiction", "Loss of Vision in One Side", "Recurring Wheezing", 
+    "Middle Finger Pain", "Painful Rash in a Stripe Pattern", "Vision Loss", 
+    "Localized Pain", "Tooth Loss", "Nearsightedness", "Severe Pain", 
+    "Diarrhea", "Coma", "Eye Redness", "Sore Arms or Legs", "Painless", 
+    "Ulcers", "Social Withdrawal", "Itchy Ears", "Growth Delay", 
+    "Decreased Ability to Feel Pain", "Scratchiness", "Daytime Sleepiness", 
+    "Abscess", "Decreased Ability to Turn", "Feeling Unwell", "Skin Bleeding", 
+    "Acne", "Pinkish Skin", "Slowness in Movement", "White Patches with Vaginal Discharge", 
+    "Vaginal Bleeding", "Cough with Blood", "Gas", "Weakness or Numbness in Legs", 
+    "Missed Period", "Muscle Ache with Difficulty Breathing", "Thyroid Enlargement", 
+    "Clumsiness", "Abdominal Swelling", "Delayed Physical Growth", 
+    "Nonaligned Eyes", "Red or Purple Skin Discoloration", "Blisters", 
+    "Burning Sensation", "Eye Inflammation", "Decreased Blood Flow", 
+    "Painful Skin", "Large Lymph Node Near Neck", "Skin Sores", 
+    "Difficulty Remembering Recent Events", "Frequent Urination", 
+    "Increased Breath Rate", "Excess Saliva", "Hoarse Voice", "Neck Lump", 
+    "Cough with Bloody Mucus", "Blindness in One Eye", "Breast Tenderness", 
+    "Possible Symptoms", "Mucus-Coughing", "Ulcers", "Upper Abdominal Pain", 
+    "Stunted Growth", "Overlying Redness", "Irregular Menstruation", 
+    "Mental Changes", "Severe Pain in Lower Back or Abdomen", "Increased Breathing Rate", 
+    "Symptoms Depending on Brain Region", "Bad Breath", "Lower Abdominal Pain", 
+    "Testicular Pain", "Skin Breakdown", "Urgency to Urinate", "Protein in Urine", 
+    "Frequent Urination", "Temporary Vision Loss in One Eye", 
+    "Close Objects Appear Blurry", "Leg Pain from Lower Back", "Small Head", 
+    "Barky Cough", "Chest Discomfort", "Poor Appetite", "Blurry Vision", 
+    "Sore Throat", "Postpartum Hemorrhage", "Reduced Motion Range", 
+    "Neck Stiffness", "Emotional Problems", "Painless Lump", "Pimple Rash", 
+    "Moisture Retention", "Low Energy", "Weakness in Limbs", "Shakiness", 
+    "Throbbing Pain", "Decreased Vision", "Auditory Hallucinations", 
+    "Fluid-Filled Blisters", "Skin Patches", "Difficulty Swallowing", 
+    "Child Mortality", "OCD Tendencies", "Burning During Urination", 
+    "Muscle Weakness", "Penile Discharge", "Heavy Menstrual Bleeding", 
+    "Characteristic Rash", "Nausea, Vomiting, Weight Loss, Dehydration", 
+    "Photophobia", "Taste Changes", "Visual Hallucinations", 
+    "Red Spots on Eye White", "Velvety Skin", "Half of Finger Ring", 
+    "Partially Dilated Pupil", "Near-Invisible Symptoms", "Vision Problems", 
+    "Disorientation", "Chills", "Chronic Bladder Pain", "Short Height", 
+    "Pale Skin", "Shortness of Breath", "Dry Mouth", "Pain or Swelling Near Tumor", 
+    "Anemia", "Dark Urine", "Fever", "Pink Skin Lesions", "Infection Risk", 
+    "Bloody Diarrhea", "Reduced Taste", "Swollen Joints", "Inverted Nipple", 
+    "Varying Eye Sizes", "Fatigue", "Weak Grip", "Nasal Congestion", 
+    "Cold Intolerance", "Gum Bleeding", "Coordination Issues", "Red-Blue Lesions", 
+    "Purple Skin Lesions", "Skin Lump", "Severe Episodes", "Fracture Risk", 
+    "Dry Cough", "Passing Sensation", "Breast Lump", "Tooth Loss", 
+    "Sensation Issues", "Foul Vaginal Discharge", "Poor Motor Coordination", 
+    "Irritability", "Anxiety", "Bloody Stool", "Genital Ulcers", "Vaginal Bleeding", 
+    "Involuntary Sleep", "Dermatitis Herpetiformis", "Watery Diarrhea", 
+    "Watery Eyes", "Increased Thirst", "Sneezing", "Itchy Blisters", 
+    "Bacterial Infections", "Eye Redness", "Yellow Skin", "Crawling Sensation", 
+    "Neck Pain", "Delirium", "Bone Pain", "Red Skin", "Preterm Birth", 
+    "Blurred Vision", "Dry Skin", "Eye Strain", "Lack of Blood Flow", 
+    "Blood Coughing", "Fainting", "Malabsorption", "Difficulty with Fine Motor Skills", 
+    "Mood Swings", "Eye Pain", "Firm Skin", "Excessive Uterine Bleeding", 
+    "Small Jaw", "Heavy Menstruation", "Tingling", "Severe Shaking", 
+    "Vision Disturbances", "Facial Muscle Paralysis", "Dementia", "Thickened Patches", 
+    "Bloody Diarrhea", "Stroke Symptoms", "Numbness", "Low Blood Pressure", 
+    "Better While Sitting", "Irregular Skin Edge", "Long-Term Alcohol Abuse", 
+    "Pale Complexion", "Wheezing", "Speech Issues", "Pain Attacks", 
+    "Short Stature", "Breathing Difficulty", "Itching", "Mouth Sores", 
+    "OCD-Like Thoughts", "Jaw Pain", "Warmth", "Breast Shape Change", 
+    "Small Blisters", "Belching", "Difficulty Reading Fine Print", 
+    "Severe Mental Disability", "Red Rash", "Swelling", "Constipation", 
+    "Vomiting", "Sharp Chest Pain", "Blood in Urine", "Drooping Eyelid", 
+    "Holding Reading Material Farther", "Light Sensitivity", "Stiff Neck", 
+    "Unspecified Symptoms", "Skin Dimpling", "Excessive Sweating", 
+    "Characteristic Facial Features", "Muscle Pain", "Weight Loss", 
+    "High Fever", "Feeling Weak", "Sudden Cough"
+];
+
+
+    // Populate the dropdown with symptoms
+    symptoms.forEach(symptom => {
+        const li = document.createElement('li');
+        li.textContent = symptom;
+        symptomDropdown.appendChild(li);
+    });
+
+    // Show dropdown when search input is focused
+    symptomSearch.addEventListener('focus', function() {
+        dropdown.style.display = 'block';
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!symptomSearch.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Filter dropdown options based on search input
+    symptomSearch.addEventListener('input', function() {
+        const filter = symptomSearch.value.toLowerCase();
+        const options = symptomDropdown.children;
+        let hasVisibleOptions = false;
+        for (let i = 0; i < options.length; i++) {
+            const option = options[i];
+            const text = option.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                option.style.display = '';
+                hasVisibleOptions = true;
+            } else {
+                option.style.display = 'none';
+            }
+        }
+        dropdown.style.display = hasVisibleOptions ? 'block' : 'none';
+    });
+
+    // Add event listener to the dropdown
+    symptomDropdown.addEventListener('click', function(event) {
+        const selectedSymptom = event.target.textContent;
+        if (selectedSymptom && !Array.from(selectedSymptomsList.children).some(li => li.textContent === selectedSymptom)) {
+            const li = document.createElement('li');
+            li.textContent = selectedSymptom;
+            selectedSymptomsList.appendChild(li);
+            event.target.classList.add('selected');
+        }
+        dropdown.style.display = 'none';
+        symptomSearch.value = '';
+    });
+
+    // Add event listener to remove symptom on click
+    selectedSymptomsList.addEventListener('click', function(event) {
+        if (event.target.tagName === 'LI') {
+            const symptom = event.target.textContent;
+            const option = Array.from(symptomDropdown.children).find(li => li.textContent === symptom);
+            if (option) {
+                option.classList.remove('selected');
+            }
+            selectedSymptomsList.removeChild(event.target);
+        }
+    });
+
+    // Collect selected symptoms and store them in the hidden input field before form submission
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function() {
+        const selectedSymptoms = Array.from(selectedSymptomsList.children).map(li => li.textContent);
+        document.getElementById('symptoms').value = selectedSymptoms.join(', ');
+    });
+});
+    </script>
+</body>
+</html>

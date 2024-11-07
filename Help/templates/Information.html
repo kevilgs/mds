@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Information</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Patient Information</h1>
+        <form action="{{ url_for('symptoms_page') }}" method="post">
+            <div class="age-gender-container">
+                <div class="age-section">
+                    <p>What is your age?</p>
+                    <input type="number" id="age" name="age" min="18" max="120" required>
+                </div>
+                <div class="gender-section">
+                    <p>What is your gender?</p>
+                    <div>
+                        <input type="radio" id="male" name="gender" value="male" required>
+                        <label for="male">Male</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="female" name="gender" value="female" required>
+                        <label for="female">Female</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="other" name="gender" value="other" required>
+                        <label for="other">Other</label>
+                    </div>
+                </div>
+            </div>
+            <div class="button-container">
+                <button class="button-29" type="submit">Next</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

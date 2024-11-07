@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Symptom Checker</h1>
+        <p><b>Before using this symptom checker, please read carefully and accept our Terms and Services:</b></p>
+        <ul>
+            <li>This checkup is not a diagnosis.</li>
+            <li>This checkup is for informational purposes and is not a qualified medical opinion.</li>
+            <li>Information that you provide is anonymous and not shared with anyone. We also do not store any information on our server.</li>
+        </ul>
+        <div class="agreement">
+            <input type="checkbox" id="agree">
+            <label for="agree">I agree to the terms and conditions</label>
+        </div>
+        <div class="button-container">
+            <button class="button-29" id="nextButton" role="button">Next</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('nextButton').addEventListener('click', function() {
+            const checkbox = document.getElementById('agree');
+            if (checkbox.checked) {
+                window.location.href = "{{ url_for('information') }}";
+            } else {
+                alert('You must agree to the terms and conditions before proceeding.');
+            }
+        });
+    </script>
+</body>
+</html>
